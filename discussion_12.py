@@ -16,7 +16,8 @@ def setUpDatabase(db_name):
 # TASK 1
 # CREATE TABLE FOR EMPLOYEE INFORMATION IN DATABASE AND ADD INFORMATION
 def create_employee_table(cur, conn):
-    pass
+    cur.execute("CREATE TABLE IF NOT EXISTS Employees (employee_id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT, job_id INT, hire_date TEXT, salary INT)")
+    conn.commit()
 
 # ADD EMPLOYEE'S INFORMTION TO THE TABLE
 
@@ -27,20 +28,61 @@ def add_employee(filename, cur, conn):
     file_data = f.read()
     f.close()
     # THE REST IS UP TO YOU
-    pass
+    employee_data = json.loads(file_data)
+    for item in employee_data:
+        employee_id = int(item["employee_id"])
+        first_name = item["first_name"]
+        last_name = item["last_name"]
+        hire_date = item["hire_date"]
+        job_id = int(item["job_id"])
+        salary = int(item["salary"])
+        cur.execute("INSERT OR IGNORE INTO Employees (employee_id, first_name, last_name, hire_date, job_id, salary) VALUES (?,?,?,?,?,?)",(employee_id, first_name, last_name, hire_date, job_id, salary))
+        conn.commit()
 
 # TASK 2: GET JOB AND HIRE_DATE INFORMATION
 def job_and_hire_date(cur, conn):
-    pass
+    cur.execute("SELECT Employees.hire_date, Jobs.job_title FROM Employees JOIN Jobs ON Employees.job_id = Jobs.job_id")
+    job_and_hire_date = cur.fetchall()
+    conn.commit()
+    
+    sorted_job_and_hire_date = sorted(job_and_hire_date, key=lambda i : i[0])
+    return sorted_job_and_hire_date[0][1] #get the smallest value
 
 # TASK 3: IDENTIFY PROBLEMATIC SALARY DATA
 # Apply JOIN clause to match individual employees
 def problematic_salary(cur, conn):
-    pass
+    cur.execute("SELECT Employees.first_name, Employees.last_name FROM Employees JOIN Jobs ON Employees.job_id = Jobs.job_id WHERE Employees.salary > Jobs.max_salary OR Employees.salary < Jobs.min_salary")
+    invalid = cur.fetchall()
+    conn.commit()
+
+    return invalid
 
 # TASK 4: VISUALIZATION
 def visualization_salary_data(cur, conn):
-    pass
+    cur.execute("SELECT Employees.salary, Jobs.job_title FROM Employees JOIN Jobs ON Employees.job_id = Jobs.job_id")
+    salary_data = cur.fetchall()
+    conn.commit()
+
+    salary_list = []
+    job_list= []
+    for item in job_data:
+        
+    for item in salary_data:
+        salary_list.append(item[0])
+        job_list.append(item[1])
+
+    plt.figure()
+    plt.scatter(job_list,salary_list)
+
+    cur.execute("SELECT Jobs.job_title, Jobs.max_salary, Jobs.min_salary FROM Jobs")
+    job_data = cur.fetchall()
+
+    plt.xticks(rotation = 45) #x-axis
+    plt.tight_layout()
+
+    plt.show()
+    
+
 
 class TestDiscussion12(unittest.TestCase):
     def setUp(self) -> None:
@@ -75,6 +117,8 @@ def main():
 
     wrong_salary = (problematic_salary(cur, conn))
     print(wrong_salary)
+
+    visualization_salary_data(cur, conn)
 
 if __name__ == "__main__":
     main()
